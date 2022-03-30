@@ -6,24 +6,19 @@
 #define MAIN -1
 #define SETTING -2
 
-#define KEY_1 49
-#define KEY_2 50
-#define KEY_3 51
-#define KEY_4 52
-
 using namespace std;
 using namespace XsUtil;
 using namespace XsSetting;
 
 // Class init
 
-void waitForInput(int type, Setting setting, GUI gui, SnakeData snakeData);
+void waitForInput(int type, Setting setting, GUI gui, Snake snakeData);
 
 
 int main() {
     GUI gui;
     Setting setting;
-    SnakeData snakeData;
+    Snake snakeData;
 
     // Show Selections
     gui.main(snakeData);
@@ -31,18 +26,18 @@ int main() {
 }
 
 
-void waitForInput(int type, Setting setting, GUI gui, SnakeData snakeData) {
+void waitForInput(int type, Setting setting, GUI gui, Snake snakeData) {
     switch (type) {
         case MAIN: { // gui selections
             switch (getch()) {
-                case KEY_1:
+                case '1':
                     setting.start();
                     break;
-                case KEY_2:
+                case '2':
                     gui.setting(snakeData);
                     waitForInput(SETTING, setting, gui, snakeData);
                     return;
-                case KEY_3:
+                case '3':
                     return;
             }
             gui.main(snakeData);
@@ -52,16 +47,16 @@ void waitForInput(int type, Setting setting, GUI gui, SnakeData snakeData) {
 
         case SETTING: { // setting selections
             switch (getch()) {
-                case KEY_1:
-                    setting.changeGameSize(snakeData);
+                case '1':
+                    setting.changeGameSize(&snakeData);
                     break;
-                case KEY_2:
-                    setting.changeHeart(snakeData);
+                case '2':
+                    setting.changeHeart(&snakeData);
                     break;
-                case KEY_3:
-                    setting.changeSpeed(snakeData);
+                case '3':
+                    setting.changeSpeed(&snakeData);
                     break;
-                case KEY_4:
+                case '4':
                     gui.main(snakeData);
                     waitForInput(MAIN, setting, gui, snakeData);
                     return;
@@ -72,4 +67,3 @@ void waitForInput(int type, Setting setting, GUI gui, SnakeData snakeData) {
         }
     }
 }
-

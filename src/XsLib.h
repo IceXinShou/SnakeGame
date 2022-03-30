@@ -1,25 +1,40 @@
 #ifndef MAIN_XSLIB_H
 #define MAIN_XSLIB_H
-#endif //MAIN_XSLIB_H
+#endif // MAIN_XSLIB_H
 
 #include <bits/stdc++.h>
-
-using namespace std;
-
-struct SnakeData {
-public:
-    int gameSize = 30;
-    int hearts = 3;
-    int speed = 10;
-};
-
-
-namespace XsUtil {
 
 #define CENTER 0
 #define CENTER_LEFT 1
 #define HIGH 30
 #define WIDTH 70
+
+using namespace std;
+
+class Snake {
+public:
+    int gameSize = 30;
+    int hearts = 3;
+    int speed = 10;
+
+    short area[WIDTH][HIGH];
+
+    void init() {
+        
+
+
+    }
+
+    void start() {
+
+    }
+
+
+};
+
+
+namespace XsUtil {
+
 
     /**
      * GUI
@@ -31,7 +46,7 @@ namespace XsUtil {
         vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<4> Exit"};
 
     public:
-        static void createMessage(const vector<string> &message, int position, SnakeData data) {
+        static void createMessage(const vector<string> &message, int position, Snake data) {
             switch (position) {
                 case CENTER: {
                     system("cls");
@@ -60,11 +75,11 @@ namespace XsUtil {
             }
         };
 
-        void main(SnakeData data) {
+        void main(Snake data) {
             XsUtil::GUI::createMessage(mainWords, CENTER_LEFT, data);
         }
 
-        void setting(SnakeData data) {
+        void setting(Snake data) {
             XsUtil::GUI::createMessage(settingWords, CENTER_LEFT, data);
         }
 
@@ -93,19 +108,19 @@ namespace XsSetting {
         vector<string> newSpeedWord{"Type New Snake's Speed (Default 10): "};
 
     public:
-        void changeGameSize(SnakeData data) {
-            XsUtil::GUI::createMessage(newGameSizeWord, CENTER, data);
-            scanf("%d", &data.gameSize);
+        void changeGameSize(Snake *data) {
+            XsUtil::GUI::createMessage(newGameSizeWord, CENTER, *data);
+            scanf("%d", &data->gameSize);
         }
 
-        void changeHeart(SnakeData data) {
-            XsUtil::GUI::createMessage(newHeartsWord, CENTER, data);
-            scanf("%d", &data.hearts);
+        void changeHeart(Snake *data) {
+            XsUtil::GUI::createMessage(newHeartsWord, CENTER, *data);
+            scanf("%d", &data->hearts);
         }
 
-        void changeSpeed(SnakeData data) {
-            XsUtil::GUI::createMessage(newSpeedWord, CENTER, data);
-            scanf("%d", &data.speed);
+        void changeSpeed(Snake *data) {
+            XsUtil::GUI::createMessage(newSpeedWord, CENTER, *data);
+            scanf("%d", &data->speed);
         }
 
         void start() {
