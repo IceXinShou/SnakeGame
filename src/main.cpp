@@ -16,6 +16,7 @@ void waitForInput(int type, Setting setting, GUI gui, Snake snakeData);
 
 
 int main() {
+    system("chcp 65001"); // UTF-8
     GUI gui;
     Setting setting;
     Snake snakeData;
@@ -23,6 +24,7 @@ int main() {
     // Show Selections
     gui.main(snakeData);
     waitForInput(MAIN, setting, gui, snakeData);
+
 }
 
 

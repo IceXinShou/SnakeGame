@@ -1,6 +1,5 @@
 #ifndef MAIN_XSLIB_H
 #define MAIN_XSLIB_H
-#endif // MAIN_XSLIB_H
 
 #include <bits/stdc++.h>
 
@@ -42,10 +41,16 @@ static void errorPrint(int errorCode) {
     if (errorCode < 0) exit(0);
 }
 
-static void printRepeat(char c, int count) {
+static void printRepeat(const char &c, int count) {
     if (count < 0) errorPrint(-1);
     while (count--)
         printf("%c", c);
+}
+
+static void printRepeat(string c, int count) {
+    if (count < 0) errorPrint(-1);
+    while (count--)
+        cout << c;
 }
 
 class Snake {
@@ -54,7 +59,6 @@ public:
     int gameSizeHigh = 30;
     int hearts = 3;
     int speed = 10;
-
 
     void init() {
         short area[gameSizeWidth][gameSizeHigh];
@@ -75,7 +79,7 @@ public:
             i[gameSizeHigh - 1] += AREA_BORDER_DOWN;
         }
 
-        area[int(gameSizeWidth / 2.0 + 0.5)][int(gameSizeHigh / 2.0 + 0.5)] = AREA_SNAKE_SPAWN_POINT;
+        area[int(gameSizeWidth >> 2)][int(gameSizeHigh >> 2)] = AREA_SNAKE_SPAWN_POINT;
 
         start();
     }
@@ -91,12 +95,6 @@ private:
 
 namespace XsUtil {
 
-
-    /**
-     * GUI
-     */
-
-
     class GUI {
         vector<string> mainWords{"<1> Start To Play", "<2> Settings", "<3> Exit"};
         vector<string> settingWords{"<1> Game Size of High", "<2> Game Size of Width", "<3> Snake's Hearts",
@@ -107,24 +105,43 @@ namespace XsUtil {
             switch (position) {
                 case CENTER: {
                     system("cls");
-                    printf("Current:\n\tGameSize: %d*%d\n\tSnake's Heart(s): %d\n\tSnake's Speed: %d",
+
+                    // --
+                    printf("╔");
+                    printRepeat("═", data.gameSizeWidth-2);
+                    printf("╗\n");
+//                    cout << "\n ║\n═";
+
+                    // --
+                    printf(""
+                           "║ Current:\n"
+                           "║ \tGameSize: %d*%d\n"
+                           "║ \tSnake's Heart(s): %d\n"
+                           "║ \tSnake's Speed: %d\n",
                            data.gameSizeWidth, data.gameSizeHigh,
                            data.hearts, data.speed);
-                    printRepeat('\n', int(data.gameSizeHigh - message.size()) / 2 - 4);
+                    printRepeat("║ \n", int((data.gameSizeHigh - message.size()) >> 2) - 4);
                     for (const string &i: message) {
-                        printf("\n");
-                        printRepeat(' ', int((data.gameSizeWidth - i.length()) / 2));
+                        printf("║ \n║ ");
+                        printRepeat(" ", int((data.gameSizeWidth - i.length()) >> 2));
                         printf("%s", i.c_str());
                     }
+                    printf("\n");
+                    printRepeat("║ \n", int((data.gameSizeHigh - message.size()) >> 2));
+
+                    printf("╚");
+                    printRepeat("═", data.gameSizeWidth-2);
+                    printf("╝");
+
                     break;
                 }
                 case CENTER_LEFT: {
-                    int space = (data.gameSizeWidth - getMaxLength(message)) / 2;
+                    int space = (data.gameSizeWidth - getMaxLength(message)) >> 2;
                     system("cls");
                     printf("Current:\n\tGameSize: %d*%d\n\tSnake's Heart(s): %d\n\tSnake's Speed: %d",
                            data.gameSizeWidth, data.gameSizeHigh,
                            data.hearts, data.speed);
-                    printRepeat('\n', int(data.gameSizeHigh - message.size()) / 2 - 3);
+                    printRepeat('\n', int((data.gameSizeHigh - message.size()) >> 2) - 3);
                     for (const string &i: message) {
                         printRepeat(' ', space);
                         printf("%s\n", i.c_str());
@@ -189,3 +206,5 @@ namespace XsSetting {
         }
     };
 }
+
+#endif // MAIN_XSLIB_H
