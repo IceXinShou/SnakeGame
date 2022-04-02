@@ -48,15 +48,18 @@ void waitForInput(int type, Setting setting, GUI gui, Snake snakeData) {
         case SETTING: { // setting selections
             switch (getch()) {
                 case '1':
-                    setting.changeGameSize(&snakeData);
+                    setting.changeGameSizeHigh(&snakeData);
                     break;
                 case '2':
-                    setting.changeHeart(&snakeData);
+                    setting.changeGameSizeWidth(&snakeData);
                     break;
                 case '3':
-                    setting.changeSpeed(&snakeData);
+                    setting.changeHeart(&snakeData);
                     break;
                 case '4':
+                    setting.changeSpeed(&snakeData);
+                    break;
+                case '5':
                     gui.main(snakeData);
                     waitForInput(MAIN, setting, gui, snakeData);
                     return;
