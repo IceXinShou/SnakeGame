@@ -21,13 +21,10 @@
 
 using namespace std;
 
-HANDLE hOut;
-
-static void errorPrint(int errorCode);
-
-static void printRepeat(const char &c, int count);
-
-static void printRepeat(const string &c, int count);
+HANDLE console; // batch setting handler
+static void errorPrint(int errorCode); // game crash or report
+static void printRepeat(const char &c, int count); // repeat print out char
+static void printRepeat(const string &c, int count); // repeat print out string
 
 struct Snake {
 public:
@@ -45,10 +42,10 @@ namespace XsUtil {
         vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<4> Exit"};
 
     public:
-        static void createMessage(const vector<string> &message, int position, Snake *data);; // lots of problems
+        static void createMessage(const vector<string> &message, int position, Snake *data);; // no error
+        static int getMaxLength(vector<string> words); // no error
         void main(Snake *data); // no error
         void setting(Snake *data); // no error
-        static int getMaxLength(vector<string> words); // no error
 
     private:
         static void printDefaultBorder(short width, short high); // no error
@@ -72,7 +69,7 @@ namespace XsUtil {
             case CENTER: {
                 printDefaultBorder(data->gameSizeWidth, data->gameSizeHigh);
 
-                SetConsoleCursorPosition(hOut, {0, 1});
+                SetConsoleCursorPosition(console, {0, 1});
 
                 printf(""
                        "║ Current:\n"
@@ -82,7 +79,8 @@ namespace XsUtil {
                        data->gameSizeWidth, data->gameSizeHigh, data->hearts, data->speed);
                 short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
                 for (const auto &i: message) {
-                    SetConsoleCursorPosition(hOut, {short((data->gameSizeWidth - 2 - i.length()) / 2.0), firstLine++});
+                    SetConsoleCursorPosition(console,
+                                             {short((data->gameSizeWidth - 2 - i.length()) / 2.0), firstLine++});
                     printf("%s", i.c_str());
                 }
                 break;
@@ -90,7 +88,7 @@ namespace XsUtil {
             case CENTER_LEFT: {
                 short space = (data->gameSizeWidth - getMaxLength(message)) >> 1;
                 printDefaultBorder(data->gameSizeWidth, data->gameSizeHigh);
-                SetConsoleCursorPosition(hOut, {0, 1});
+                SetConsoleCursorPosition(console, {0, 1});
                 printf(""
                        "║ Current:\n"
                        "║ - GameSize: %d * %d\n"
@@ -100,7 +98,7 @@ namespace XsUtil {
                 short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
 
                 for (const string &i: message) {
-                    SetConsoleCursorPosition(hOut, {space, firstLine++});
+                    SetConsoleCursorPosition(console, {space, firstLine++});
                     printf("%s", i.c_str());
                 }
 
@@ -111,15 +109,15 @@ namespace XsUtil {
 
     void GUI::printDefaultBorder(short width, short high) {
         system("cls");
-        SetConsoleCursorPosition(hOut, {0, 0});
+        SetConsoleCursorPosition(console, {0, 0});
         printf("╔");
         printRepeat("═", width - 2);
         printf("╗\n");
         for (short i = 0; i < high - 2; ++i) {
             short posY = i + 1;
-            SetConsoleCursorPosition(hOut, {0, posY});
+            SetConsoleCursorPosition(console, {0, posY});
             printf("║");
-            SetConsoleCursorPosition(hOut, {short(width - 1), posY});
+            SetConsoleCursorPosition(console, {short(width - 1), posY});
             printf("║");
         }
         printf("\n╚");
@@ -138,8 +136,8 @@ namespace XsSetting {
 
     public:
 
-        static void init(HANDLE hOut); //
-        static void start(Snake *data); // none
+        static void init(HANDLE console); // no error
+        static void start(Snake *data); // no exit
         void changeGameSize(Snake *data); // ! check whether string length suitable for new size
         void changeHeart(Snake *data); // no error
         void changeSpeed(Snake *data); // no error
@@ -263,8 +261,8 @@ namespace XsSetting {
         }
     }
 
-    void Setting::init(HANDLE hOut) {
-        ::hOut = hOut;
+    void Setting::init(HANDLE console) {
+        ::console = console;
     }
 
     void Setting::start(Snake *data) {
