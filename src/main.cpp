@@ -21,7 +21,13 @@ int main() {
     Setting setting;
     Snake snakeData;
 
+
+    HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (stdHandle == INVALID_HANDLE_VALUE)
+        return GetLastError();
+
     // Show Selections
+    XsSetting::Setting::init(&stdHandle);
     gui.main(snakeData);
     waitForInput(MAIN, setting, gui, snakeData);
 
