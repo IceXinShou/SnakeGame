@@ -2,6 +2,7 @@
 #define MAIN_XSLIB_H
 
 #include <bits/stdc++.h>
+#include <conio.h>
 
 #define CENTER 0
 #define CENTER_LEFT 1
@@ -47,7 +48,7 @@ static void printRepeat(const char &c, int count) {
         printf("%c", c);
 }
 
-static void printRepeat(string c, int count) {
+static void printRepeat(const string &c, int count) {
     if (count < 0) errorPrint(-1);
     while (count--)
         cout << c;
@@ -55,8 +56,8 @@ static void printRepeat(string c, int count) {
 
 class Snake {
 public:
-    int gameSizeWidth = 50;
-    int gameSizeHigh = 30;
+    int gameSizeWidth = 60;
+    int gameSizeHigh = 28;
     int hearts = 3;
     int speed = 10;
 
@@ -79,7 +80,7 @@ public:
             i[gameSizeHigh - 1] += AREA_BORDER_DOWN;
         }
 
-        area[int(gameSizeWidth >> 2)][int(gameSizeHigh >> 2)] = AREA_SNAKE_SPAWN_POINT;
+        area[int(gameSizeWidth >> 1)][int(gameSizeHigh >> 1)] = AREA_SNAKE_SPAWN_POINT;
 
         start();
     }
@@ -97,8 +98,8 @@ namespace XsUtil {
 
     class GUI {
         vector<string> mainWords{"<1> Start To Play", "<2> Settings", "<3> Exit"};
-        vector<string> settingWords{"<1> Game Size of High", "<2> Game Size of Width", "<3> Snake's Hearts",
-                                    "<4> Snake's Speed", "<5> Exit"};
+        vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts",
+                                    "<3> Snake's Speed", "<4> Exit"};
 
     public:
         static void createMessage(const vector<string> &message, int position, Snake data) {
@@ -108,44 +109,77 @@ namespace XsUtil {
 
                     // --
                     printf("╔");
-                    printRepeat("═", data.gameSizeWidth-2);
+                    printRepeat("═", data.gameSizeWidth - 2);
                     printf("╗\n");
-//                    cout << "\n ║\n═";
-
                     // --
+
+
                     printf(""
                            "║ Current:\n"
-                           "║ \tGameSize: %d*%d\n"
-                           "║ \tSnake's Heart(s): %d\n"
-                           "║ \tSnake's Speed: %d\n",
+                           "║   GameSize: %d * %d\n"
+                           "║   Snake's Heart(s): %d\n"
+                           "║   Snake's Speed: %d\n",
                            data.gameSizeWidth, data.gameSizeHigh,
                            data.hearts, data.speed);
-                    printRepeat("║ \n", int((data.gameSizeHigh - message.size()) >> 2) - 4);
-                    for (const string &i: message) {
-                        printf("║ \n║ ");
-                        printRepeat(" ", int((data.gameSizeWidth - i.length()) >> 2));
-                        printf("%s", i.c_str());
-                    }
-                    printf("\n");
-                    printRepeat("║ \n", int((data.gameSizeHigh - message.size()) >> 2));
 
+//                    cout << left << setw(30) << "║ Current:\n";
+//                    cout << left << setw(30) << "║   GameSize: " << data.gameSizeWidth << '*' << data.gameSizeHigh
+//                         << '\n';
+//                    cout << left << setw(30) << "║   Snake's Heart(s): " << data.hearts << '\n';
+//                    cout << left << setw(30) << "║   Snake's Speed: " << data.speed << '\n';
+                    printRepeat("║ \n", int(data.gameSizeHigh - message.size()) / 2.0 - 5.5);
+                    for (const string &i: message) {
+//                        printf("║ \n║ ");
+                        cout << "║ " << std::left << setfill(' ') << setw(data.gameSizeWidth - 2) << i << "║\n";
+//                        printRepeat(" ", int((data.gameSizeWidth - i.length()) / 2.0 + 0.5));
+//                        printf("%s", i.c_str());
+//                        printRepeat(' ', int((data.gameSizeWidth - i.length()) / 2.0));
+//                        printf("║");
+                    }
+
+                    printRepeat("║ \n", int((data.gameSizeHigh - message.size()) / 2.0));
+
+                    // --
                     printf("╚");
-                    printRepeat("═", data.gameSizeWidth-2);
+                    printRepeat("═", data.gameSizeWidth - 2);
                     printf("╝");
+                    // --
 
                     break;
                 }
                 case CENTER_LEFT: {
-                    int space = (data.gameSizeWidth - getMaxLength(message)) >> 2;
+                    int space = (data.gameSizeWidth - getMaxLength(message)) >> 1;
                     system("cls");
-                    printf("Current:\n\tGameSize: %d*%d\n\tSnake's Heart(s): %d\n\tSnake's Speed: %d",
+
+                    // --
+                    printf("╔");
+                    printRepeat("═", data.gameSizeWidth - 2);
+                    printf("╗\n");
+                    // --
+
+                    printf(""
+                           "║ Current:\n"
+                           "║   GameSize: %d * %d\n"
+                           "║   Snake's Heart(s): %d\n"
+                           "║   Snake's Speed: %d\n",
                            data.gameSizeWidth, data.gameSizeHigh,
                            data.hearts, data.speed);
-                    printRepeat('\n', int((data.gameSizeHigh - message.size()) >> 2) - 3);
+
+                    printRepeat("║\n", int((data.gameSizeHigh - message.size()) / 2.0 - 5.5));
                     for (const string &i: message) {
+                        printf("║ ");
                         printRepeat(' ', space);
                         printf("%s\n", i.c_str());
                     }
+
+                    printRepeat("║ \n", int((data.gameSizeHigh - message.size()) / 2.0));
+
+                    // --
+                    printf("╚");
+                    printRepeat("═", data.gameSizeWidth - 2);
+                    printf("╝");
+                    // --
+
                     break;
                 }
             }
@@ -175,23 +209,63 @@ namespace XsSetting {
      */
 
     class Setting {
-        vector<string> newGameSizeHighWord{"Type New Game Size of High (Default 30): "};
-        vector<string> newGameSizeWidthWord{"Type New Game Size of Width (Default 30): "};
+        vector<string> changeGameSizeWidthWord{"← Width → | ↑ High  ↓"};
         vector<string> newHeartsWord{"Type New Snake's Heart(s) (Default 3): "};
         vector<string> newSpeedWord{"Type New Snake's Speed (Default 10): "};
 
     public:
-        void changeGameSizeHigh(Snake *data) {
-            XsUtil::GUI::createMessage(newGameSizeHighWord, CENTER, *data);
-            scanf("%d", &data->gameSizeHigh);
+        void changeGameSize(Snake *data) {
+            while (true) {
+                XsUtil::GUI::createMessage(changeGameSizeWidthWord, CENTER, *data);
+
+                if (getch() == 224)
+                    switch (getch()) {
+                        case 80:
+                            // code for arrow up
+                            data->gameSizeHigh += 1;
+                            break;
+                        case 72:
+                            // code for arrow down
+                            data->gameSizeHigh -= 1;
+                            break;
+                        case 145:
+                            // code for ctrl arrow up
+                            data->gameSizeHigh += 10;
+                            break;
+                        case 141:
+                            // code for ctrl arrow down
+                            data->gameSizeHigh -= 10;
+                            break;
+                            // ---------------------------------
+                        case 75:
+                            // code for arrow left
+                            if (data->gameSizeWidth > 1)
+                                data->gameSizeWidth -= 1;
+                            break;
+                        case 77:
+                            // code for arrow right
+                            data->gameSizeWidth += 1;
+                            break;
+                        case 116:
+                            // code for ctrl arrow right
+                            data->gameSizeWidth += 10;
+                            break;
+                        case 115:
+                            // code for ctrl arrow left
+                            if (data->gameSizeWidth > 10)
+                                data->gameSizeWidth -= 10;
+                            break;
+
+                        default:
+                            continue;
+                    }
+                else break;
+            }
         }
 
-        void changeGameSizeWidth(Snake *data) {
-            XsUtil::GUI::createMessage(newGameSizeWidthWord, CENTER, *data);
-            scanf("%d", &data->gameSizeWidth);
-        }
 
         void changeHeart(Snake *data) {
+
             XsUtil::GUI::createMessage(newHeartsWord, CENTER, *data);
             scanf("%d", &data->hearts);
         }
