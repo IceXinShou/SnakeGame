@@ -21,7 +21,7 @@
 
 using namespace std;
 
-HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+HANDLE hOut;
 
 static void errorPrint(int errorCode);
 
@@ -29,44 +29,12 @@ static void printRepeat(const char &c, int count);
 
 static void printRepeat(const string &c, int count);
 
-class Snake {
+struct Snake {
 public:
     short gameSizeWidth = 60;
     short gameSizeHigh = 28;
     unsigned int hearts = 3;
     unsigned int speed = 10;
-
-
-    void init() {
-        short area[gameSizeWidth][gameSizeHigh];
-        // set area to 0 (default)
-        for (auto &i: area)
-            for (short &j: i)
-                j = AREA_AIR;
-
-
-        // set high border
-        for (int i = 0; i < gameSizeHigh; ++i) {
-            area[0][i] += AREA_BORDER_LEFT;
-            area[gameSizeWidth - 1][i] += AREA_BORDER_RIGH;
-        }
-
-        // set width border
-        for (auto &i: area) {
-            i[0] += AREA_BORDER_UP;
-            i[gameSizeHigh - 1] += AREA_BORDER_DOWN;
-        }
-
-        area[int(gameSizeWidth >> 1)][int(gameSizeHigh >> 1)] = AREA_SNAKE_SPAWN_POINT;
-
-        start();
-    } // not yet
-
-private:
-    void start() {
-
-    }
-
 };
 
 
@@ -77,20 +45,20 @@ namespace XsUtil {
         vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<4> Exit"};
 
     public:
-        static void createMessage(const vector<string> &message, int position, Snake data);; // lots of problems
-        void main(Snake data); // no error
-        void setting(Snake data); // no error
+        static void createMessage(const vector<string> &message, int position, Snake *data);; // lots of problems
+        void main(Snake *data); // no error
+        void setting(Snake *data); // no error
         static int getMaxLength(vector<string> words); // no error
 
     private:
-        static void printDefaultBorder(Snake data);
+        static void printDefaultBorder(int width, int high); // no error
     };
 
-    void GUI::main(Snake data) {
+    void GUI::main(Snake *data) {
         XsUtil::GUI::createMessage(mainWords, CENTER_LEFT, data);
     }
 
-    void GUI::setting(Snake data) {
+    void GUI::setting(Snake *data) {
         XsUtil::GUI::createMessage(settingWords, CENTER_LEFT, data);
     }
 
@@ -99,61 +67,33 @@ namespace XsUtil {
                                       [](const auto &a, const auto &b) { return a.size() < b.size(); })).length());
     }
 
-    void GUI::createMessage(const vector<string> &message, int position, Snake data) {
+    void GUI::createMessage(const vector<string> &message, int position, Snake *data) {
         switch (position) {
             case CENTER: {
-                system("cls");
+                printDefaultBorder(data->gameSizeWidth, data->gameSizeHigh);
 
-                // --
-                printf("╔");
-                printRepeat("═", data.gameSizeWidth - 2);
-                printf("╗\n");
-                // --
-
+                SetConsoleCursorPosition(hOut, {0, 1});
 
                 printf(""
                        "║ Current:\n"
-                       "║   GameSize: %d * %d\n"
-                       "║   Snake's Heart(s): %d\n"
-                       "║   Snake's Speed: %d\n",
-                       data.gameSizeWidth, data.gameSizeHigh,
-                       data.hearts, data.speed);
-
-//                    cout << left << setw(30) << "║ Current:\n";
-//                    cout << left << setw(30) << "║   GameSize: " << data.gameSizeWidth << '*' << data.gameSizeHigh
-//                         << '\n';
-//                    cout << left << setw(30) << "║   Snake's Heart(s): " << data.hearts << '\n';
-//                    cout << left << setw(30) << "║   Snake's Speed: " << data.speed << '\n';
-                printRepeat("║ \n", int(data.gameSizeHigh - message.size()) / 2.0 - 5.5);
-                for (const string &i: message) {
-//                        printf("║ \n║ ");
-                    cout << "║ " << std::left << setw(data.gameSizeWidth - 3) << setfill(' ') << i << "║\n";
-
-
-
-//                        printRepeat(" ", int((data.gameSizeWidth - i.length()) / 2.0 + 0.5));
-//                        printf("%s", i.c_str());
-//                        printRepeat(' ', int((data.gameSizeWidth - i.length()) / 2.0));
-//                        printf("║");
+                       "║ - GameSize: %d * %d\n"
+                       "║ - Snake's Heart(s): %d\n"
+                       "║ - Snake's Speed: %d\n",
+                       data->gameSizeWidth, data->gameSizeHigh, data->hearts, data->speed);
+                short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
+                for (const auto &i: message) {
+                    SetConsoleCursorPosition(hOut, {short((data->gameSizeWidth - 2 - i.length()) / 2.0), firstLine++});
+                    printf("%s", i.c_str());
                 }
-
-                printRepeat("║ \n", int((data.gameSizeHigh - message.size()) / 2.0));
-
-                // --
-                printf("╚");
-                printRepeat("═", data.gameSizeWidth - 2);
-                printf("╝");
-                // --
-
                 break;
             }
             case CENTER_LEFT: {
-                int space = (data.gameSizeWidth - getMaxLength(message)) >> 1;
+                int space = (data->gameSizeWidth - getMaxLength(message)) >> 1;
                 system("cls");
 
                 // --
                 printf("╔");
-                printRepeat("═", data.gameSizeWidth - 2);
+                printRepeat("═", data->gameSizeWidth - 2);
                 printf("╗\n");
                 // --
 
@@ -162,23 +102,23 @@ namespace XsUtil {
                        "║   GameSize: %d * %d\n"
                        "║   Snake's Heart(s): %d\n"
                        "║   Snake's Speed: %d\n",
-                       data.gameSizeWidth, data.gameSizeHigh,
-                       data.hearts, data.speed);
+                       data->gameSizeWidth, data->gameSizeHigh,
+                       data->hearts, data->speed);
 
-                printRepeat("║\n", int((data.gameSizeHigh - message.size()) / 2.0 - 5.5));
+                printRepeat("║\n", int((data->gameSizeHigh - message.size()) / 2.0 - 5.5));
                 for (const string &i: message) {
                     printf("║ ");
                     printRepeat(' ', space);
-                    cout << std::left << setw(data.gameSizeWidth - space) << setfill(' ') << i << "║\n";
+                    cout << std::left << setw(data->gameSizeWidth - space) << setfill(' ') << i << "║\n";
 //                        printf("%s\n", i.c_str());
 
                 }
 
-                printRepeat("║ \n", int((data.gameSizeHigh - message.size()) / 2.0));
+                printRepeat("║ \n", int((data->gameSizeHigh - message.size()) / 2.0));
 
                 // --
                 printf("╚");
-                printRepeat("═", data.gameSizeWidth - 2);
+                printRepeat("═", data->gameSizeWidth - 2);
                 printf("╝");
                 // --
 
@@ -187,47 +127,45 @@ namespace XsUtil {
         }
     }
 
-    void GUI::printDefaultBorder(Snake data) {
-        SetConsoleCursorPosition(hOut, {1, 1});
+    void GUI::printDefaultBorder(int width, int high) {
+        system("cls");
+        SetConsoleCursorPosition(hOut, {0, 0});
         printf("╔");
-        printRepeat("═", data.gameSizeWidth - 2);
+        printRepeat("═", width - 2);
         printf("╗\n");
-        for (short i = 0; i < data.gameSizeHigh - 2; ++i) {
-            short posY = i + 2;
-            SetConsoleCursorPosition(hOut, {1, posY});
+        for (short i = 0; i < high - 2; ++i) {
+            short posY = i + 1;
+            SetConsoleCursorPosition(hOut, {0, posY});
             printf("║");
-            SetConsoleCursorPosition(hOut, {static_cast<SHORT>(data.gameSizeWidth + 1), posY});
+            SetConsoleCursorPosition(hOut, {short(width - 1), posY});
             printf("║");
         }
         printf("\n╚");
-        printRepeat("═", data.gameSizeWidth - 2);
+        printRepeat("═", width - 2);
         printf("╝");
     }
-
 }
 
 
 namespace XsSetting {
 
     class Setting {
-        vector<string> changeGameSizeWidthWord{"← Width → | ↑ High  ↓"};
+        vector<string> changeGameSizeWord{"←  Width  →    |    ↑  High  ↓"};
         vector<string> newHeartsWord{"Type New Snake's Heart(s) (Default 3): "};
         vector<string> newSpeedWord{"Type New Snake's Speed (Default 10): "};
 
     public:
 
-        static void init(HANDLE hOut);
-
+        static void init(HANDLE hOut); //
+        static void start(Snake *data); // none
         void changeGameSize(Snake *data); // ! check whether string length suitable for new size
         void changeHeart(Snake *data); // no error
         void changeSpeed(Snake *data); // no error
-        void start(); // none
-
     };
 
     void Setting::changeGameSize(Snake *data) {
         while (true) {
-            XsUtil::GUI::createMessage(changeGameSizeWidthWord, CENTER, *data);
+            XsUtil::GUI::createMessage(changeGameSizeWord, CENTER, data);
             if (getch() == 224)
                 switch (getch()) {
                     case 80:
@@ -281,7 +219,7 @@ namespace XsSetting {
 
     void Setting::changeHeart(Snake *data) {
         while (true) {
-            XsUtil::GUI::createMessage(newHeartsWord, CENTER, *data);
+            XsUtil::GUI::createMessage(newHeartsWord, CENTER, data);
             if (getch() == 224)
                 switch (getch()) {
                     case 80:
@@ -313,7 +251,7 @@ namespace XsSetting {
 
     void Setting::changeSpeed(Snake *data) {
         while (true) {
-            XsUtil::GUI::createMessage(newSpeedWord, CENTER, *data);
+            XsUtil::GUI::createMessage(newSpeedWord, CENTER, data);
             if (getch() == 224)
                 switch (getch()) {
                     case 80:
@@ -347,7 +285,28 @@ namespace XsSetting {
         ::hOut = hOut;
     }
 
-    void Setting::start() {
+    void Setting::start(Snake *data) {
+
+        short area[data->gameSizeWidth][data->gameSizeHigh];
+        // set area to 0 (default)
+        for (auto &i: area)
+            for (short &j: i)
+                j = AREA_AIR;
+
+
+        // set high border
+        for (int i = 0; i < data->gameSizeHigh; ++i) {
+            area[0][i] += AREA_BORDER_LEFT;
+            area[data->gameSizeWidth - 1][i] += AREA_BORDER_RIGH;
+        }
+
+        // set width border
+        for (auto &i: area) {
+            i[0] += AREA_BORDER_UP;
+            i[data->gameSizeHigh - 1] += AREA_BORDER_DOWN;
+        }
+
+        area[int(data->gameSizeWidth >> 1)][int(data->gameSizeHigh >> 1)] = AREA_SNAKE_SPAWN_POINT;
 
     }
 }
@@ -376,7 +335,7 @@ void errorPrint(int errorCode) {
     } else {
         printf("Game met an error: ");
         switch (errorCode) {
-            case -1:
+            case 1:
                 printf("Something here!");
                 break;
         }
