@@ -20,12 +20,18 @@ int main() {
     GUI gui;
     Setting setting;
     Snake snakeData;
-
-
-
     HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
     if (stdHandle == INVALID_HANDLE_VALUE)
         return GetLastError();
+
+
+
+    CONSOLE_CURSOR_INFO CURSOR;
+    CURSOR.dwSize = 1;
+    CURSOR.bVisible = FALSE;
+    SetConsoleCursorInfo(stdHandle, &CURSOR);//second argument need pointer
+
     // Show Selections
 
     XsSetting::Setting::init(stdHandle);
