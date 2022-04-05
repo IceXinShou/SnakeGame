@@ -4,25 +4,16 @@
 #include <bits/stdc++.h>
 #include <conio.h>
 
+
 #define CENTER 0
 #define CENTER_LEFT 1
 
 // ***
 #define AREA_FRUIT 2
-#define AREA_SNAKE_SPAWN_POINT 1
 #define AREA_AIR 0
-#define AREA_SNAKE_BODY -1
-#define AREA_BORDER_LEFT -2
-#define AREA_BORDER_RIGH -3
-#define AREA_BORDER_UP -4
-#define AREA_BORDER_LEFT_UP -6
-#define AREA_BORDER_RIGHT_UP -7
-#define AREA_BORDER_DOWN -8
-#define AREA_BORDER_LEFT_DOWN -10
-#define AREA_BORDER_RIGHT_DOWN -11
+#define AREA_SNAKE_HEAD -1
+#define AREA_SNAKE_BODY -2
 // ***
-
-
 
 
 using namespace std;
@@ -33,9 +24,13 @@ static void printRepeat(const char &c, int count); // repeat print out char
 static void printRepeat(const string &c, int count); // repeat print out string
 
 struct Snake {
-    short posHistory[255][255] = {0}; // history of snake's position
+    short x[255 * 255];
+    short y[255 * 255];
+    int length = 3;
+    int lengthNow = 0;
+    int offset = 0;
     short gameSizeWidth = 60; // game size width
-    short gameSizeHigh = 30; // game size high
+    short gameSizeHeigh = 30; // game size high
     unsigned int hearts = 3; // snake's hearts
     unsigned int speed = 10; // snake's speed
     unsigned int level = 3; // snake's level
@@ -56,8 +51,13 @@ namespace XsUtil {
         void main(); // no error
         void setting(); // no error
 
+        static void printDefaultBorder(short width, short high);
+
+        // no error
+        static void clearScreenWithoutBorder(short width, short height);
+
     private:
-        static void printDefaultBorder(short width, short high); // no error
+        // no error
         Snake *data;
     };
 
@@ -81,7 +81,8 @@ namespace XsUtil {
     void GUI::createMessage(const vector<string> &message, int position, Snake *data) {
         switch (position) {
             case CENTER: {
-                printDefaultBorder(data->gameSizeWidth, data->gameSizeHigh);
+                clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeigh);
+//                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeigh);
 
                 SetConsoleCursorPosition(console, {0, 1});
 
@@ -90,8 +91,8 @@ namespace XsUtil {
                        "║ - GameSize: %d * %d\n"
                        "║ - Snake's Heart(s): %d\n"
                        "║ - Snake's Speed: %d\n",
-                       data->gameSizeWidth, data->gameSizeHigh, data->hearts, data->speed);
-                short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
+                       data->gameSizeWidth, data->gameSizeHeigh, data->hearts, data->speed);
+                short firstLine = (data->gameSizeHeigh - 6) / 2.0 + 0.5;
                 for (const auto &i: message) {
                     SetConsoleCursorPosition(console,
                                              {short((data->gameSizeWidth - 2 - i.length()) / 2.0), firstLine++});
@@ -101,7 +102,8 @@ namespace XsUtil {
             }
             case CENTER_LEFT: {
                 short space = (data->gameSizeWidth - getMaxLength(message)) >> 1;
-                printDefaultBorder(data->gameSizeWidth, data->gameSizeHigh);
+//                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeigh);
+                clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeigh);
                 SetConsoleCursorPosition(console, {0, 1});
                 printf(""
                        "║ Current:\n"
@@ -138,6 +140,13 @@ namespace XsUtil {
         printRepeat("═", width - 2);
         printf("╝");
     }
+
+    void GUI::clearScreenWithoutBorder(short width, short height) {
+        for (short i = 1; i < height - 1; ++i) {
+            SetConsoleCursorPosition(console, {1, i});
+            printf(ESC"[%dX", width - 2);
+        }
+    }
 }
 
 
@@ -164,28 +173,29 @@ namespace XsSetting {
 
     void Setting::changeGameSize() {
         while (true) {
+            XsUtil::GUI::printDefaultBorder(data->gameSizeWidth, data->gameSizeHeigh);
             XsUtil::GUI::createMessage(changeGameSizeWord, CENTER, data);
             if (getch() == 224)
                 switch (getch()) {
                     case 80:
                         // code for arrow down
-                        if (data->gameSizeHigh < 255)
-                            data->gameSizeHigh += 1;
+                        if (data->gameSizeHeigh < 255)
+                            data->gameSizeHeigh += 1;
                         break;
                     case 72:
                         // code for arrow up
-                        if (data->gameSizeHigh > 1)
-                            data->gameSizeHigh -= 1;
+                        if (data->gameSizeHeigh > 1)
+                            data->gameSizeHeigh -= 1;
                         break;
                     case 145:
                         // code for ctrl arrow down
-                        if (data->gameSizeHigh < 246)
-                            data->gameSizeHigh += 10;
+                        if (data->gameSizeHeigh < 246)
+                            data->gameSizeHeigh += 10;
                         break;
                     case 141:
                         // code for ctrl arrow up
-                        if (data->gameSizeHigh > 10)
-                            data->gameSizeHigh -= 10;
+                        if (data->gameSizeHeigh > 10)
+                            data->gameSizeHeigh -= 10;
                         break;
                         // ---------------------------------
                     case 75:
@@ -208,7 +218,6 @@ namespace XsSetting {
                         if (data->gameSizeWidth > 10)
                             data->gameSizeWidth -= 10;
                         break;
-
                     default:
                         break;
                 }
@@ -281,36 +290,114 @@ namespace XsSetting {
     }
 
     void Setting::start() {
-        const short width = data->gameSizeWidth;
-        const short height = data->gameSizeHigh;
+        const short width = data->gameSizeWidth / 2 - 1;
+        const short height = data->gameSizeHeigh;
 
-        short area[width][height];
+        char moveState = 'd';
+        short area[height][width];
         // set area to 0 (default)
         for (auto &i: area)
-            for (short &j: i)
+            for (auto &j: i)
                 j = AREA_AIR;
 
-
-        // set high border
-        for (int i = 0; i < data->gameSizeHigh; ++i) {
-            area[0][i] += AREA_BORDER_LEFT;
-            area[data->gameSizeWidth - 1][i] += AREA_BORDER_RIGH;
-        }
-
-        // set width border
-        for (auto &i: area) {
-            i[0] += AREA_BORDER_UP;
-            i[data->gameSizeHigh - 1] += AREA_BORDER_DOWN;
-        }
-
         // set spawnpoint
-        area[data->gameSizeWidth >> 1][data->gameSizeHigh >> 1] = AREA_SNAKE_SPAWN_POINT;
+        short headx = width >> 1;
+        short heady = height >> 1;
+        area[heady][headx] = AREA_SNAKE_HEAD;
+
+        // render setting
+        float fps = 30;
+        struct timeval last{}, now = {0, 0}, secTimer = {0, 0};
+        long renderTime = 0;
+        long maxRenTime = 0;
+        long delayTime = 0;
+        mingw_gettimeofday(&now, nullptr);
+
+        // 按鍵監聽
+        pthread_t keyListener;
+        wchar_t key;
+        pthread_create(&keyListener, nullptr, keyEvent, (void *) &key);
+
+        //
+        int q = fps / data->speed * 5;
+        int timer = 0;
+        while (true) {
+            // render
+
+            // get input
+            switch (key) {
+                case 'w':
+                    moveState = 'w';
+                    break;
+                case 's':
+                    moveState = 's';
+                    break;
+                case 'a':
+                    moveState = 'a';
+                    break;
+                case 'd':
+                    moveState = 'd';
+                    break;
+            }
+
+            // 清除畫面
+            XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeigh);
+            printf(ESC"[1;1H");
+            for (int i = 0; i < height; ++i) {
+                printf(ESC"[%dd" ESC"[0m", i + 2);
+                for (int j = 0; j < width; ++j) {
+                    switch (area[i][j]) {
+                        case AREA_SNAKE_HEAD:
+                            printf(ESC"[%dG" ESC"[42m  ", j * 2 + 2);
+                            break;
+                        case AREA_SNAKE_BODY:
+                            printf(ESC"[%dG" ESC"[43m  ", j * 2 + 2);
+                            break;
+                    }
+                }
+            }
 
 
+            if (timer-- == 0) {
+                timer = q;
+                area[heady][headx] = AREA_SNAKE_BODY;
+                data->x[data->offset + data->lengthNow] = headx;
+                data->y[data->offset + data->lengthNow] = heady;
+                data->lengthNow++;
 
+                if (moveState == 'd')
+                    headx++;
+                else if (moveState == 'a')
+                    headx--;
+                else if (moveState == 'w')
+                    heady--;
+                else heady++;
+                area[heady][headx] = AREA_SNAKE_HEAD;
+            }
 
+            // show info
+            // struct rusage r_usage;
+            // getrusage(RUSAGE_SELF, &r_usage);
+//            sprintf(msg, "Size: %dx%d\tFPS: %.2f\t%.2fms/max: %.2fms\t change: %d",
+//                    canvas.width, canvas.height,
+//                    (renderTime + delayTime) == 0
+//                    ? 1000000
+//                    : 1000000.f / (renderTime + delayTime),
+//                    (float)renderTime / 1000.f, (float)maxRenTime / 1000.f,
+//                    canvas.changeLen
+//            );
+//            printStatusLine(msg);
 
+//            sprintf(msgb, "Key: %d\t %d", key, 0);
+//            printBottomLine(msgb);
 
+            SetConsoleCursorPosition(console, {1, 1});
+            printf("FPS: %.2f\t%.2fms/max: %.2fms %d   ",
+                   (renderTime + delayTime) == 0 ? 1000000 : 1000000.f / (renderTime + delayTime),
+                   (float) renderTime / 1000.f,
+                   (float) maxRenTime / 1000.f,
+                   headx
+            );
 
     }
 }

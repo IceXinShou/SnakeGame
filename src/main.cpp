@@ -29,6 +29,7 @@ int main() {
 
     // Show Selections
 
+    gui.printDefaultBorder(snakeData->gameSizeWidth, snakeData->gameSizeHeigh);
     gui.main();
     waitForInput(MAIN, setting, gui);
 }
@@ -36,20 +37,17 @@ int main() {
 void waitForInput(int type, Setting setting, GUI gui) {
     switch (type) {
         case MAIN: { // gui selections
-            switch (getch()) {
-                case '1':
+            switch (_getwch()) {
+                case 13:  // Enter
                     setting.start();
                     break;
-                case '2':
+                case 111:  // O
                     gui.setting();
                     waitForInput(SETTING, setting, gui);
                     return;
-                case '3':
+                case 27: // Esc
                     exit(0);
             }
-            gui.main();
-            waitForInput(MAIN, setting, gui);
-            break;
         }
         case SETTING: { // setting selections
             switch (getch()) {
