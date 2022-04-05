@@ -12,70 +12,64 @@ using namespace XsSetting;
 
 // Class init
 
-void waitForInput(int type, Setting setting, GUI gui, Snake *snakeData);
+void waitForInput(int type, Setting setting, GUI gui);
 
 
 int main() {
     system("chcp 65001 | cls"); // UTF-8
-    GUI gui;
-    Setting setting;
-    Snake snakeData;
-    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    auto *snakeData = new Snake();
+    GUI gui = GUI(snakeData);
+    Setting setting = Setting(snakeData);
+    console = GetStdHandle(STD_OUTPUT_HANDLE);
 
     if (console == INVALID_HANDLE_VALUE)
         return GetLastError();
 
-    CONSOLE_CURSOR_INFO CURSOR;
-    CURSOR.dwSize = 1;
-    CURSOR.bVisible = FALSE;
-    SetConsoleCursorInfo(console, &CURSOR);//second argument need pointer
+    SetConsoleCursorInfo(console, new CONSOLE_CURSOR_INFO{1, false});
 
     // Show Selections
 
-    XsSetting::Setting::init(console);
-    gui.main(&snakeData);
-    waitForInput(MAIN, setting, gui, &snakeData);
-
+    gui.main();
+    waitForInput(MAIN, setting, gui);
 }
 
-
-void waitForInput(int type, Setting setting, GUI gui, Snake *snakeData) {
+void waitForInput(int type, Setting setting, GUI gui) {
     switch (type) {
         case MAIN: { // gui selections
             switch (getch()) {
                 case '1':
-                    setting.start(snakeData);
+                    setting.start();
                     break;
                 case '2':
-                    gui.setting(snakeData);
-                    waitForInput(SETTING, setting, gui, snakeData);
+                    gui.setting();
+                    waitForInput(SETTING, setting, gui);
                     return;
                 case '3':
-                    return;
+                    exit(0);
             }
-            gui.main(snakeData);
-            waitForInput(MAIN, setting, gui, snakeData);
+            gui.main();
+            waitForInput(MAIN, setting, gui);
             break;
         }
         case SETTING: { // setting selections
             switch (getch()) {
                 case '1':
-                    setting.changeGameSize(snakeData);
+                    setting.changeGameSize();
                     break;
                 case '2':
-                    setting.changeHeart(snakeData);
+                    setting.changeHeart();
                     break;
                 case '3':
-                    setting.changeSpeed(snakeData);
+                    setting.changeSpeed();
                     break;
                 case '4':
-                    gui.main(snakeData);
-                    waitForInput(MAIN, setting, gui, snakeData);
+                    gui.main();
+                    waitForInput(MAIN, setting, gui);
                     return;
             }
 
-            gui.setting(snakeData);
-            waitForInput(SETTING, setting, gui, snakeData);
+            gui.setting();
+            waitForInput(SETTING, setting, gui);
             break;
         }
     }

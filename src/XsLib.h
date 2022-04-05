@@ -6,6 +6,8 @@
 
 #define CENTER 0
 #define CENTER_LEFT 1
+
+// ***
 #define AREA_FRUIT 2
 #define AREA_SNAKE_SPAWN_POINT 1
 #define AREA_AIR 0
@@ -18,6 +20,10 @@
 #define AREA_BORDER_DOWN -8
 #define AREA_BORDER_LEFT_DOWN -10
 #define AREA_BORDER_RIGHT_DOWN -11
+// ***
+
+
+
 
 using namespace std;
 
@@ -27,11 +33,12 @@ static void printRepeat(const char &c, int count); // repeat print out char
 static void printRepeat(const string &c, int count); // repeat print out string
 
 struct Snake {
-public:
-    short gameSizeWidth = 60;
-    short gameSizeHigh = 28;
-    unsigned int hearts = 3;
-    unsigned int speed = 10;
+    short posHistory[255][255] = {0}; // history of snake's position
+    short gameSizeWidth = 60; // game size width
+    short gameSizeHigh = 30; // game size high
+    unsigned int hearts = 3; // snake's hearts
+    unsigned int speed = 10; // snake's speed
+    unsigned int level = 3; // snake's level
 };
 
 
@@ -42,20 +49,27 @@ namespace XsUtil {
         vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<4> Exit"};
 
     public:
+        explicit GUI(Snake *data);
+
         static void createMessage(const vector<string> &message, int position, Snake *data);; // no error
         static int getMaxLength(vector<string> words); // no error
-        void main(Snake *data); // no error
-        void setting(Snake *data); // no error
+        void main(); // no error
+        void setting(); // no error
 
     private:
         static void printDefaultBorder(short width, short high); // no error
+        Snake *data;
     };
 
-    void GUI::main(Snake *data) {
+    GUI::GUI(Snake *data) {
+        this->data = data;
+    }
+
+    void GUI::main() {
         XsUtil::GUI::createMessage(mainWords, CENTER_LEFT, data);
     }
 
-    void GUI::setting(Snake *data) {
+    void GUI::setting() {
         XsUtil::GUI::createMessage(settingWords, CENTER_LEFT, data);
     }
 
@@ -135,15 +149,20 @@ namespace XsSetting {
         vector<string> changeSpeedWord{"↑  Speed  ↓"};
 
     public:
-
-        static void init(HANDLE console); // no error
-        static void start(Snake *data); // no exit
-        void changeGameSize(Snake *data); // ! check whether string length suitable for new size
-        void changeHeart(Snake *data); // no error
-        void changeSpeed(Snake *data); // no error
+        explicit Setting(Snake *data); // no error
+        void start(); // no exit
+        void changeGameSize(); // ! check whether string length suitable for new size
+        void changeHeart(); // no error
+        void changeSpeed(); // no error
+    private:
+        Snake *data;
     };
 
-    void Setting::changeGameSize(Snake *data) {
+    Setting::Setting(Snake *data) {
+        this->data = data;
+    }
+
+    void Setting::changeGameSize() {
         while (true) {
             XsUtil::GUI::createMessage(changeGameSizeWord, CENTER, data);
             if (getch() == 224)
@@ -176,12 +195,12 @@ namespace XsSetting {
                         break;
                     case 77:
                         // code for arrow right
-                        if (data->gameSizeHigh < 255)
+                        if (data->gameSizeWidth < 255)
                             data->gameSizeWidth += 1;
                         break;
                     case 116:
                         // code for ctrl arrow right
-                        if (data->gameSizeHigh < 246)
+                        if (data->gameSizeWidth < 246)
                             data->gameSizeWidth += 10;
                         break;
                     case 115:
@@ -197,7 +216,7 @@ namespace XsSetting {
         }
     }
 
-    void Setting::changeHeart(Snake *data) {
+    void Setting::changeHeart() {
         while (true) {
             XsUtil::GUI::createMessage(changeHeartsWord, CENTER, data);
             if (getch() == 224)
@@ -229,7 +248,7 @@ namespace XsSetting {
         }
     }
 
-    void Setting::changeSpeed(Snake *data) {
+    void Setting::changeSpeed() {
         while (true) {
             XsUtil::GUI::createMessage(changeSpeedWord, CENTER, data);
             if (getch() == 224)
@@ -261,13 +280,11 @@ namespace XsSetting {
         }
     }
 
-    void Setting::init(HANDLE console) {
-        ::console = console;
-    }
+    void Setting::start() {
+        const short width = data->gameSizeWidth;
+        const short height = data->gameSizeHigh;
 
-    void Setting::start(Snake *data) {
-
-        short area[data->gameSizeWidth][data->gameSizeHigh];
+        short area[width][height];
         // set area to 0 (default)
         for (auto &i: area)
             for (short &j: i)
@@ -286,10 +303,18 @@ namespace XsSetting {
             i[data->gameSizeHigh - 1] += AREA_BORDER_DOWN;
         }
 
-        area[int(data->gameSizeWidth >> 1)][int(data->gameSizeHigh >> 1)] = AREA_SNAKE_SPAWN_POINT;
+        // set spawnpoint
+        area[data->gameSizeWidth >> 1][data->gameSizeHigh >> 1] = AREA_SNAKE_SPAWN_POINT;
+
+
+
+
+
+
 
     }
 }
+
 
 void printRepeat(const string &c, int count) {
     if (count < 0) errorPrint(-1);
