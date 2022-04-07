@@ -29,7 +29,7 @@ int main() {
 
     // Show Selections
 
-    gui.printDefaultBorder(snakeData->gameSizeWidth, snakeData->gameSizeHeigh);
+    gui.printDefaultBorder(snakeData->gameSizeWidth, snakeData->gameSizeHeight);
     gui.main();
     waitForInput(MAIN, setting, gui);
 }

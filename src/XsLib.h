@@ -22,20 +22,20 @@ HANDLE console; // batch setting handler
 static void errorPrint(int errorCode); // game crash or report
 static void printRepeat(const char &c, int count); // repeat print out char
 static void printRepeat(const string &c, int count); // repeat print out string
+static void pos(const short &x, const short &y); // set cursor position
 
 struct Snake {
-    short x[255 * 255];
-    short y[255 * 255];
+    short x[255 * 255]{};
+    short y[255 * 255]{};
     int length = 3;
     int lengthNow = 0;
     int offset = 0;
     short gameSizeWidth = 60; // game size width
-    short gameSizeHeigh = 30; // game size high
+    short gameSizeHeight = 30; // game size high
     unsigned int hearts = 3; // snake's hearts
     unsigned int speed = 10; // snake's speed
     unsigned int level = 3; // snake's level
 };
-
 
 namespace XsUtil {
 
@@ -81,30 +81,29 @@ namespace XsUtil {
     void GUI::createMessage(const vector<string> &message, int position, Snake *data) {
         switch (position) {
             case CENTER: {
-                clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeigh);
-//                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeigh);
+                clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
+//                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeight);
 
-                SetConsoleCursorPosition(console, {0, 1});
+                pos(0, 1);
 
                 printf(""
                        "║ Current:\n"
                        "║ - GameSize: %d * %d\n"
                        "║ - Snake's Heart(s): %d\n"
                        "║ - Snake's Speed: %d\n",
-                       data->gameSizeWidth, data->gameSizeHeigh, data->hearts, data->speed);
-                short firstLine = (data->gameSizeHeigh - 6) / 2.0 + 0.5;
+                       data->gameSizeWidth, data->gameSizeHeight, data->hearts, data->speed);
+                short firstLine = (data->gameSizeHeight - 6) / 2.0 + 0.5;
                 for (const auto &i: message) {
-                    SetConsoleCursorPosition(console,
-                                             {short((data->gameSizeWidth - 2 - i.length()) / 2.0), firstLine++});
+                    pos((data->gameSizeWidth - 2 - i.length()) / 2.0f, firstLine++);
                     printf("%s", i.c_str());
                 }
                 break;
             }
             case CENTER_LEFT: {
                 short space = (data->gameSizeWidth - getMaxLength(message)) >> 1;
-//                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeigh);
-                clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeigh);
-                SetConsoleCursorPosition(console, {0, 1});
+//                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeight);
+                clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
+                pos(0, 1);
                 printf(""
                        "║ Current:\n"
                        "║ - GameSize: %d * %d\n"
@@ -114,7 +113,7 @@ namespace XsUtil {
                 short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
 
                 for (const string &i: message) {
-                    SetConsoleCursorPosition(console, {space, firstLine++});
+                    pos(space, firstLine++);
                     printf("%s", i.c_str());
                 }
 
@@ -125,15 +124,15 @@ namespace XsUtil {
 
     void GUI::printDefaultBorder(short width, short high) {
         system("cls");
-        SetConsoleCursorPosition(console, {0, 0});
+        pos(0, 0);
         printf("╔");
         printRepeat("═", width - 2);
         printf("╗\n");
         for (short i = 0; i < high - 2; ++i) {
             short posY = i + 1;
-            SetConsoleCursorPosition(console, {0, posY});
+            pos(0, posY);
             printf("║");
-            SetConsoleCursorPosition(console, {short(width - 1), posY});
+            pos(width - 1, posY);
             printf("║");
         }
         printf("\n╚");
@@ -143,7 +142,7 @@ namespace XsUtil {
 
     void GUI::clearScreenWithoutBorder(short width, short height) {
         for (short i = 1; i < height - 1; ++i) {
-            SetConsoleCursorPosition(console, {1, i});
+            pos(1, i);
             printf(ESC"[%dX", width - 2);
         }
     }
@@ -173,29 +172,29 @@ namespace XsSetting {
 
     void Setting::changeGameSize() {
         while (true) {
-            XsUtil::GUI::printDefaultBorder(data->gameSizeWidth, data->gameSizeHeigh);
+            XsUtil::GUI::printDefaultBorder(data->gameSizeWidth, data->gameSizeHeight);
             XsUtil::GUI::createMessage(changeGameSizeWord, CENTER, data);
             if (getch() == 224)
                 switch (getch()) {
                     case 80:
                         // code for arrow down
-                        if (data->gameSizeHeigh < 255)
-                            data->gameSizeHeigh += 1;
+                        if (data->gameSizeHeight < 255)
+                            data->gameSizeHeight += 1;
                         break;
                     case 72:
                         // code for arrow up
-                        if (data->gameSizeHeigh > 1)
-                            data->gameSizeHeigh -= 1;
+                        if (data->gameSizeHeight > 1)
+                            data->gameSizeHeight -= 1;
                         break;
                     case 145:
                         // code for ctrl arrow down
-                        if (data->gameSizeHeigh < 246)
-                            data->gameSizeHeigh += 10;
+                        if (data->gameSizeHeight < 246)
+                            data->gameSizeHeight += 10;
                         break;
                     case 141:
                         // code for ctrl arrow up
-                        if (data->gameSizeHeigh > 10)
-                            data->gameSizeHeigh -= 10;
+                        if (data->gameSizeHeight > 10)
+                            data->gameSizeHeight -= 10;
                         break;
                         // ---------------------------------
                     case 75:
@@ -291,7 +290,7 @@ namespace XsSetting {
 
     void Setting::start() {
         const short width = data->gameSizeWidth / 2 - 1;
-        const short height = data->gameSizeHeigh;
+        const short height = data->gameSizeHeight;
 
         char moveState = 'd';
         short area[height][width];
@@ -341,7 +340,7 @@ namespace XsSetting {
             }
 
             // 清除畫面
-            XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeigh);
+            XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
             printf(ESC"[1;1H");
             for (int i = 0; i < height; ++i) {
                 printf(ESC"[%dd" ESC"[0m", i + 2);
@@ -436,5 +435,8 @@ void errorPrint(int errorCode) {
     if (errorCode < 0) exit(0);
 }
 
+void pos(short x, short y) {
+    SetConsoleCursorPosition(console, {x, y});
+}
 
 #endif // MAIN_XSLIB_H
