@@ -9,7 +9,7 @@
 #define CENTER_LEFT 1
 
 // ***
-#define AREA_FRUIT 2
+#define AREA_FOOD 2
 #define AREA_AIR 0
 #define AREA_SNAKE_HEAD -1
 #define AREA_SNAKE_BODY -2
@@ -25,13 +25,13 @@ static void printRepeat(const string &c, int count); // repeat print out string
 static void pos(const short &x, const short &y); // set cursor position
 
 struct Snake {
-    short x[255 * 255]{};
-    short y[255 * 255]{};
-    int length = 3;
-    int lengthNow = 0;
-    int offset = 0;
-    short gameSizeWidth = 60; // game size width
-    short gameSizeHeight = 30; // game size high
+    unsigned short x[255 * 255]{};
+    unsigned short y[255 * 255]{};
+    unsigned int length = 3;
+    unsigned int lengthNow = 0;
+    unsigned int offset = 0;
+    unsigned short gameSizeWidth = 60; // game size width
+    unsigned short gameSizeHeight = 30; // game size high
     unsigned int hearts = 3; // snake's hearts
     unsigned int speed = 10; // snake's speed
     unsigned int level = 3; // snake's level
@@ -84,7 +84,7 @@ namespace XsUtil {
                 clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
 //                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeight);
 
-                pos(0, 1);
+                SetConsoleCursorPosition(console, {0, 1});
 
                 printf(""
                        "║ Current:\n"
@@ -94,7 +94,8 @@ namespace XsUtil {
                        data->gameSizeWidth, data->gameSizeHeight, data->hearts, data->speed);
                 short firstLine = (data->gameSizeHeight - 6) / 2.0 + 0.5;
                 for (const auto &i: message) {
-                    pos((data->gameSizeWidth - 2 - i.length()) / 2.0f, firstLine++);
+                    SetConsoleCursorPosition(console,
+                                             {short((data->gameSizeWidth - 2 - i.length()) / 2.0f), firstLine++});
                     printf("%s", i.c_str());
                 }
                 break;
@@ -103,7 +104,7 @@ namespace XsUtil {
                 short space = (data->gameSizeWidth - getMaxLength(message)) >> 1;
 //                printDefaultBorder(data->gameSizeWidth, data->gameSizeHeight);
                 clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
-                pos(0, 1);
+                SetConsoleCursorPosition(console, {0, 1});
                 printf(""
                        "║ Current:\n"
                        "║ - GameSize: %d * %d\n"
@@ -113,7 +114,7 @@ namespace XsUtil {
                 short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
 
                 for (const string &i: message) {
-                    pos(space, firstLine++);
+                    SetConsoleCursorPosition(console, {space, firstLine++});
                     printf("%s", i.c_str());
                 }
 
@@ -124,15 +125,15 @@ namespace XsUtil {
 
     void GUI::printDefaultBorder(short width, short high) {
         system("cls");
-        pos(0, 0);
+        SetConsoleCursorPosition(console, {0, 0});
         printf("╔");
         printRepeat("═", width - 2);
         printf("╗\n");
         for (short i = 0; i < high - 2; ++i) {
             short posY = i + 1;
-            pos(0, posY);
+            SetConsoleCursorPosition(console, {0, posY});
             printf("║");
-            pos(width - 1, posY);
+            SetConsoleCursorPosition(console, {short(width - 1), posY});
             printf("║");
         }
         printf("\n╚");
@@ -142,7 +143,7 @@ namespace XsUtil {
 
     void GUI::clearScreenWithoutBorder(short width, short height) {
         for (short i = 1; i < height - 1; ++i) {
-            pos(1, i);
+            SetConsoleCursorPosition(console, {1, i});
             printf(ESC"[%dX", width - 2);
         }
     }
@@ -152,12 +153,14 @@ namespace XsUtil {
 namespace XsSetting {
 
     class Setting {
+        vector<string> gameOverWord{"You Lose!", "Press any key to continue"};
         vector<string> changeGameSizeWord{"←  Width  →    |    ↑  High  ↓"};
         vector<string> changeHeartsWord{"↑  Heart(s)  ↓"};
         vector<string> changeSpeedWord{"↑  Speed  ↓"};
 
     public:
         explicit Setting(Snake *data); // no error
+        static void *keyEvent(void *wch); // no error
         void start(); // no exit
         void changeGameSize(); // ! check whether string length suitable for new size
         void changeHeart(); // no error
@@ -289,6 +292,8 @@ namespace XsSetting {
     }
 
     void Setting::start() {
+        bool dead = false;
+        bool fruitEat = false;
         const short width = data->gameSizeWidth / 2 - 1;
         const short height = data->gameSizeHeight;
 
@@ -305,7 +310,7 @@ namespace XsSetting {
         area[heady][headx] = AREA_SNAKE_HEAD;
 
         // render setting
-        float fps = 30;
+        float fps = 10;
         struct timeval last{}, now = {0, 0}, secTimer = {0, 0};
         long renderTime = 0;
         long maxRenTime = 0;
@@ -313,16 +318,15 @@ namespace XsSetting {
         mingw_gettimeofday(&now, nullptr);
 
         // 按鍵監聽
+        pthread_t keyThread;
         pthread_t keyListener;
-        wchar_t key;
+        wchar_t key = '\0';
         pthread_create(&keyListener, nullptr, keyEvent, (void *) &key);
 
-        //
         int q = fps / data->speed * 5;
         int timer = 0;
-        while (true) {
-            // render
 
+        while (true) {
             // get input
             switch (key) {
                 case 'w':
@@ -354,15 +358,51 @@ namespace XsSetting {
                             break;
                     }
                 }
+                if (dead) {
+                    XsUtil::GUI::createMessage(gameOverWord, CENTER, data);
+                    return;
+                }
             }
 
-
+            // 更新蛇
             if (timer-- == 0) {
-                timer = q;
-                area[heady][headx] = AREA_SNAKE_BODY;
-                data->x[data->offset + data->lengthNow] = headx;
-                data->y[data->offset + data->lengthNow] = heady;
-                data->lengthNow++;
+                timer = q; // reset timer
+                area[heady][headx] = AREA_SNAKE_BODY; // set head to body
+
+                switch (moveState) {
+                    case 'd':
+                        ++headx;
+                        break;
+                    case 'a':
+                        --headx;
+                        break;
+                    case 'w':
+                        --heady;
+                        break;
+                    case 's':
+                        ++heady;
+                        break;
+                }
+
+                // 判斷新狀態
+                if (headx < 0 || headx >= width || heady < 0 || heady >= height) { // out of area
+                    dead = true;
+                } else if (area[heady][headx] == AREA_SNAKE_BODY) { // if head is body
+                    dead = true;
+                } else if (area[heady][headx] == AREA_FOOD) { // if head is food
+                    data->length++;
+                    fruitEat = true;
+                }
+
+                // 更新蛇資料
+                data->x[data->offset + data->lengthNow] = headx; // set x
+                data->y[data->offset + data->lengthNow] = heady; // set y
+
+                // 更新蛇長度
+                if (data->lengthNow++ == data->length) { // if length is full
+                    data->offset++;
+                }
+
 
                 if (moveState == 'd')
                     headx++;
@@ -373,22 +413,6 @@ namespace XsSetting {
                 else heady++;
                 area[heady][headx] = AREA_SNAKE_HEAD;
             }
-
-            // show info
-            // struct rusage r_usage;
-            // getrusage(RUSAGE_SELF, &r_usage);
-//            sprintf(msg, "Size: %dx%d\tFPS: %.2f\t%.2fms/max: %.2fms\t change: %d",
-//                    canvas.width, canvas.height,
-//                    (renderTime + delayTime) == 0
-//                    ? 1000000
-//                    : 1000000.f / (renderTime + delayTime),
-//                    (float)renderTime / 1000.f, (float)maxRenTime / 1000.f,
-//                    canvas.changeLen
-//            );
-//            printStatusLine(msg);
-
-//            sprintf(msgb, "Key: %d\t %d", key, 0);
-//            printBottomLine(msgb);
 
             SetConsoleCursorPosition(console, {1, 1});
             printf("FPS: %.2f\t%.2fms/max: %.2fms %d   ",
@@ -435,8 +459,5 @@ void errorPrint(int errorCode) {
     if (errorCode < 0) exit(0);
 }
 
-void pos(short x, short y) {
-    SetConsoleCursorPosition(console, {x, y});
-}
 
 #endif // MAIN_XSLIB_H
