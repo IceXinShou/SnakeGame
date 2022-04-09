@@ -42,8 +42,8 @@ struct Snake {
 namespace XsUtil {
 
     class GUI {
-        vector<string> mainWords{"<ENTER> Start To Play", "<O> Settings", "<ESC> Exit"};
-        vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<ESC> Exit"};
+        vector<string> mainWords = {"<ENTER> Start To Play", "<O> Settings", "<ESC> Exit"};
+        vector<string> settingWords = {"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<ESC> Exit"};
 
     public:
         explicit GUI(Snake *data);
@@ -155,10 +155,10 @@ namespace XsUtil {
 namespace XsSetting {
 
     class Setting {
-        vector<string> gameOverWord{"You Lose!", "Press any key to continue"};
-        vector<string> changeGameSizeWord{"←  Width  →    |    ↑  High  ↓"};
-        vector<string> changeHeartsWord{"↑  Heart(s)  ↓"};
-        vector<string> changeSpeedWord{"↑  Speed  ↓"};
+        vector<string> gameOverWord = {"You Lose!", "Press any key to continue"};
+        vector<string> changeGameSizeWord = {"←  Width  →    |    ↑  High  ↓"};
+        vector<string> changeHeartsWord = {"↑  Heart(s)  ↓"};
+        vector<string> changeSpeedWord = {"↑  Speed  ↓"};
 
     public:
         explicit Setting(Snake *data); // no error
