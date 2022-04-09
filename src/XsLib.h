@@ -15,6 +15,8 @@
 #define AREA_SNAKE_BODY -2
 // ***
 
+#define ESC "\x1B"
+
 
 using namespace std;
 
@@ -40,8 +42,8 @@ struct Snake {
 namespace XsUtil {
 
     class GUI {
-        vector<string> mainWords{"<1> Start To Play", "<2> Settings", "<3> Exit"};
-        vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<4> Exit"};
+        vector<string> mainWords{"<ENTER> Start To Play", "<O> Settings", "<ESC> Exit"};
+        vector<string> settingWords{"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<ESC> Exit"};
 
     public:
         explicit GUI(Snake *data);
@@ -110,8 +112,8 @@ namespace XsUtil {
                        "║ - GameSize: %d * %d\n"
                        "║ - Snake's Heart(s): %d\n"
                        "║ - Snake's Speed: %d\n",
-                       data->gameSizeWidth, data->gameSizeHigh, data->hearts, data->speed);
-                short firstLine = (data->gameSizeHigh - 6) / 2.0 + 0.5;
+                       data->gameSizeWidth, data->gameSizeHeight, data->hearts, data->speed);
+                short firstLine = (data->gameSizeHeight - 6) / 2.0f + 0.5f;
 
                 for (const string &i: message) {
                     SetConsoleCursorPosition(console, {space, firstLine++});
@@ -291,6 +293,16 @@ namespace XsSetting {
         }
     }
 
+    void *Setting::keyEvent(void *wch) {
+        long usec = 100;
+        struct timespec threadDelay = {usec / 1000000, (usec % 1000000) * 1000};
+        while (*(wchar_t *) wch != '\r') {
+            *(wchar_t *) wch = _getwch();
+            nanosleep(&threadDelay, &threadDelay);
+        }
+        pthread_exit(nullptr);
+    }
+
     void Setting::start() {
         bool dead = false;
         bool fruitEat = false;
@@ -422,6 +434,31 @@ namespace XsSetting {
                    headx
             );
 
+            // timer
+            last = now;
+            mingw_gettimeofday(&now, nullptr);
+            renderTime = (now.tv_sec - last.tv_sec) * 1000000L +
+                         (now.tv_usec - last.tv_usec);
+            if ((now.tv_sec - secTimer.tv_sec) * 1000000L +
+                (now.tv_usec - secTimer.tv_usec) >
+                1000000L) {
+                secTimer = now;
+                maxRenTime = renderTime;
+            }
+            if (renderTime > maxRenTime) maxRenTime = renderTime;
+
+            // update delay
+            delayTime = 1000000 / fps - renderTime;
+            if (delayTime > 0) {
+                struct timespec ts = {0, delayTime * 1000};
+                nanosleep(&ts, &ts);
+            } else
+                delayTime = 0;
+            mingw_gettimeofday(&now, nullptr);
+
+            if (key == '\r')
+                break;
+        }
     }
 }
 

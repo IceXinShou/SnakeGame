@@ -50,17 +50,17 @@ void waitForInput(int type, Setting setting, GUI gui) {
             }
         }
         case SETTING: { // setting selections
-            switch (getch()) {
-                case '1':
+            switch (_getwch()) {
+                case 49: // 1
                     setting.changeGameSize();
                     break;
-                case '2':
+                case 50: // Space
                     setting.changeHeart();
                     break;
-                case '3':
+                case 51: // Page Up
                     setting.changeSpeed();
                     break;
-                case '4':
+                case 27: // Esc
                     gui.main();
                     waitForInput(MAIN, setting, gui);
                     return;
