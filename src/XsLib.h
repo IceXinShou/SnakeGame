@@ -416,13 +416,6 @@ namespace XsSetting {
                 }
 
 
-                if (moveState == 'd')
-                    headx++;
-                else if (moveState == 'a')
-                    headx--;
-                else if (moveState == 'w')
-                    heady--;
-                else heady++;
                 area[heady][headx] = AREA_SNAKE_HEAD;
             }
 
@@ -494,6 +487,10 @@ void errorPrint(int errorCode) {
     }
     printf("\n-\n\n");
     if (errorCode < 0) exit(0);
+
+    //
+
+
 }
 
 
