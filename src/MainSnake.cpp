@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 #include <windows.h>
-#include "XsLib.h"
+#include "SnakeLib.h"
 
 #define MAIN -1
 #define SETTING -2
