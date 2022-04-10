@@ -24,18 +24,25 @@ HANDLE console; // batch setting handler
 static void errorPrint(int errorCode); // game crash or report
 static void printRepeat(const char &c, int count); // repeat print out char
 static void printRepeat(const string &c, int count); // repeat print out string
-static void pos(const short &x, const short &y); // set cursor position
+static void pos(short y, short x); // pos
+int checkTouch(const unsigned short ax[255 * 255], const unsigned short ay[255 * 255], unsigned int x, unsigned int y,
+               unsigned int length,
+               unsigned int offset); // check touch
 
-struct Snake {
-    unsigned short x[255 * 255]{};
-    unsigned short y[255 * 255]{};
+class Snake {
+public:
+    unsigned short snakex[255 * 255]{};
+    unsigned short snakey[255 * 255]{};
+    unsigned short foodx[255 * 255]{};
+    unsigned short foody[255 * 255]{};
+    unsigned int foodCount = 20;
     unsigned int length = 3;
     unsigned int lengthNow = 0;
     unsigned int offset = 0;
     unsigned short gameSizeWidth = 60; // game size width
     unsigned short gameSizeHeight = 30; // game size high
     unsigned int hearts = 3; // snake's hearts
-    unsigned int speed = 10; // snake's speed
+    unsigned int speed = 20; // snake's speed
     unsigned int level = 3; // snake's level
 };
 
@@ -46,8 +53,7 @@ namespace XsUtil {
         vector<string> settingWords = {"<1> Game Size", "<2> Snake's Hearts", "<3> Snake's Speed", "<ESC> Exit"};
 
     public:
-        explicit GUI(Snake *data);
-
+        explicit GUI(Snake *data) { this->data = data; }; // constructor
         static void createMessage(const vector<string> &message, int position, Snake *data);; // no error
         static int getMaxLength(vector<string> words); // no error
         void main(); // no error
@@ -63,9 +69,6 @@ namespace XsUtil {
         Snake *data;
     };
 
-    GUI::GUI(Snake *data) {
-        this->data = data;
-    }
 
     void GUI::main() {
         XsUtil::GUI::createMessage(mainWords, CENTER_LEFT, data);
@@ -161,7 +164,7 @@ namespace XsSetting {
         vector<string> changeSpeedWord = {"↑  Speed  ↓"};
 
     public:
-        explicit Setting(Snake *data); // no error
+        explicit Setting(Snake *data) { this->data = data; }; // no error
         static void *keyEvent(void *wch); // no error
         void start(); // no exit
         void changeGameSize(); // ! check whether string length suitable for new size
@@ -170,10 +173,6 @@ namespace XsSetting {
     private:
         Snake *data;
     };
-
-    Setting::Setting(Snake *data) {
-        this->data = data;
-    }
 
     void Setting::changeGameSize() {
         while (true) {
@@ -300,29 +299,41 @@ namespace XsSetting {
             *(wchar_t *) wch = _getwch();
             nanosleep(&threadDelay, &threadDelay);
         }
-        pthread_exit(nullptr);
-    }
+        pthread_exit(nullptr);//
+    }//
 
     void Setting::start() {
+        XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
         bool dead = false;
-        bool fruitEat = false;
         const short width = data->gameSizeWidth / 2 - 1;
-        const short height = data->gameSizeHeight;
+        const short height = data->gameSizeHeight - 1;
+
+//            data->foodx[0] =5;
+//            data->foody[0] =2;
+
+        for (int i = 0; i < data->foodCount; ++i) {
+            int x, y;
+            while (checkTouch(data->foodx, data->foody,
+                              (x = rand() % (width - 1) + 1), (y = rand() % (height - 1) + 1),
+                              data->foodCount, 0
+            ) > -1);
+            data->foodx[i] = x;
+            data->foody[i] = y;
+            pos(data->foody[i], data->foodx[i] * 2);
+            printf(ESC"[41m  ");
+        }
 
         char moveState = 'd';
-        short area[height][width];
-        // set area to 0 (default)
-        for (auto &i: area)
-            for (auto &j: i)
-                j = AREA_AIR;
 
         // set spawnpoint
-        short headx = width >> 1;
-        short heady = height >> 1;
-        area[heady][headx] = AREA_SNAKE_HEAD;
+//        unsigned short headx = width >> 1;
+//        unsigned short heady = height >> 1;
+        unsigned short headx = 1;
+        unsigned short heady = 2;
+        unsigned short oldX = headx, oldY = heady;
 
         // render setting
-        float fps = 10;
+        float fps = data->speed;
         struct timeval last{}, now = {0, 0}, secTimer = {0, 0};
         long renderTime = 0;
         long maxRenTime = 0;
@@ -330,32 +341,66 @@ namespace XsSetting {
         mingw_gettimeofday(&now, nullptr);
 
         // 按鍵監聽
-        pthread_t keyThread;
         pthread_t keyListener;
         wchar_t key = '\0';
         pthread_create(&keyListener, nullptr, keyEvent, (void *) &key);
 
-        int q = fps / data->speed * 5;
+//        int q = fps / data->speed * 5;
+        int q = 1;
         int timer = 0;
 
         while (true) {
             // get input
             switch (key) {
                 case 'w':
-                    moveState = 'w';
+                    if (moveState != 's')
+                        moveState = 'w';
                     break;
                 case 's':
-                    moveState = 's';
+                    if (moveState != 'w')
+                        moveState = 's';
                     break;
                 case 'a':
-                    moveState = 'a';
+                    if (moveState != 'd')
+                        moveState = 'a';
                     break;
                 case 'd':
-                    moveState = 'd';
+                    if (moveState != 'a')
+                        moveState = 'd';
                     break;
             }
 
+
+
+            // ---------------------
+
+//            if (!initDone) {
+//                pos(heady, headx * 2);
+//                printf(ESC"[43m  ");
+//
+//                // change old head to body
+//                pos(oldY, oldX * 2);
+//                printf(ESC"[42m  ");
+//            } else {
+            // set new head
+            pos(heady, headx * 2);
+            printf(ESC"[43m  ");
+
+            // change old head to body
+            pos(oldY, oldX * 2);
+            printf(ESC"[42m  ");
+
+            // remove tail
+            if (data->lengthNow == data->length) {
+                pos(data->snakey[data->offset], data->snakex[data->offset] * 2);
+                printf(ESC"[0m  ");
+            }
+//            }
+
+            // ---------------------
+
             // 清除畫面
+            /*
             XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
             printf(ESC"[1;1H");
             for (int i = 0; i < height; ++i) {
@@ -370,61 +415,80 @@ namespace XsSetting {
                             break;
                     }
                 }
-                if (dead) {
-                    XsUtil::GUI::createMessage(gameOverWord, CENTER, data);
-                    return;
-                }
             }
-
+        */
             // 更新蛇
             if (timer-- == 0) {
                 timer = q; // reset timer
-                area[heady][headx] = AREA_SNAKE_BODY; // set head to body
+                // 更新蛇資料
+                data->snakex[data->offset + data->lengthNow] = headx; // set snakex
+                data->snakey[data->offset + data->lengthNow] = heady; // set snakey
 
                 switch (moveState) {
                     case 'd':
-                        ++headx;
+                        oldX = headx++;
+                        oldY = heady;
                         break;
                     case 'a':
-                        --headx;
+                        oldX = headx--;
+                        oldY = heady;
                         break;
                     case 'w':
-                        --heady;
+                        oldY = heady--;
+                        oldX = headx;
                         break;
                     case 's':
-                        ++heady;
+                        oldY = heady++;
+                        oldX = headx;
                         break;
                 }
 
                 // 判斷新狀態
-                if (headx < 0 || headx >= width || heady < 0 || heady >= height) { // out of area
+                int i;
+                if (headx <= 0 || headx >= width || heady <= 0 || heady >= height) {
                     dead = true;
-                } else if (area[heady][headx] == AREA_SNAKE_BODY) { // if head is body
+                } else if (checkTouch(data->snakex, data->snakey, headx, heady, data->lengthNow,
+                                      data->offset) > -1) { // if head is body
                     dead = true;
-                } else if (area[heady][headx] == AREA_FOOD) { // if head is food
+                } else if ((i = checkTouch(data->foodx, data->foody, headx, heady, data->foodCount, 0)) >
+                           -1) { // if head is food
                     data->length++;
-                    fruitEat = true;
+                    int x, y;
+                    while (checkTouch(data->foodx, data->foody,
+                                      (x = rand() % (width - 2) + 1), (y = rand() % (height - 2) + 1),
+                                      data->foodCount, 0) > -1 &&
+                    checkTouch(data->snakex, data->snakey, x, y,
+                               data->lengthNow,data->offset) > -1);
+                    data->foodx[i] = x;
+                    data->foody[i] = y;
+                    pos(y, x * 2);
+                    printf(ESC"[41m  ");
                 }
 
-                // 更新蛇資料
-                data->x[data->offset + data->lengthNow] = headx; // set x
-                data->y[data->offset + data->lengthNow] = heady; // set y
+                if (dead) {
+                    XsUtil::GUI::createMessage(gameOverWord, CENTER, data);
+                    return;
+                }
 
-                // 更新蛇長度
-                if (data->lengthNow++ == data->length) { // if length is full
+//                // 更新蛇長度
+//                if (initDone) // if init done
+//                    data->offset++;
+//                else if (++data->lengthNow == data->length) { // if length is full
+//                    initDone = true;
+//                }
+
+                if (data->lengthNow == data->length)
                     data->offset++;
-                }
-
-
-                area[heady][headx] = AREA_SNAKE_HEAD;
+                else
+                    data->lengthNow++;
             }
 
             SetConsoleCursorPosition(console, {1, 1});
-            printf("FPS: %.2f\t%.2fms/max: %.2fms %d   ",
+            printf(ESC"[%dXFPS: %.2f\t%.2fms/max: %.2fms ",
+                   data->gameSizeWidth - 2,
                    (renderTime + delayTime) == 0 ? 1000000 : 1000000.f / (renderTime + delayTime),
                    (float) renderTime / 1000.f,
-                   (float) maxRenTime / 1000.f,
-                   headx
+                   (float) maxRenTime / 1000.f
             );
 
             // timer
@@ -491,6 +555,21 @@ void errorPrint(int errorCode) {
     //
 
 
+}
+
+int checkTouch(const unsigned short ax[255 * 255], const unsigned short ay[255 * 255], unsigned int x, unsigned int y,
+               unsigned int length,
+               unsigned int offset) {
+
+    for (int i = 0; i < length; ++i) {
+        if (ax[offset + i] == x && ay[offset + i] == y)
+            return i; // return touched index
+    }
+    return -1; // not touch
+}
+
+static void pos(short y, short x) {
+    SetConsoleCursorPosition(console, {x, y});
 }
 
 

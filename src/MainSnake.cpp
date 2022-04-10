@@ -1,4 +1,3 @@
-#include <bits/stdc++.h>
 #include <windows.h>
 #include "SnakeLib.h"
 
@@ -15,6 +14,7 @@ void waitForInput(int type, Setting setting, GUI gui);
 
 
 int main() {
+    srand(time(NULL));
     system("chcp 65001 | cls"); // UTF-8
     auto *snakeData = new Snake();
     GUI gui = GUI(snakeData);
