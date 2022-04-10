@@ -42,7 +42,7 @@ public:
     unsigned short gameSizeWidth = 60; // game size width
     unsigned short gameSizeHeight = 30; // game size high
     unsigned int hearts = 3; // snake's hearts
-    unsigned int speed = 20; // snake's speed
+    unsigned int speed = 30; // snake's speed
     unsigned int level = 3; // snake's level
 };
 
@@ -158,7 +158,7 @@ namespace XsUtil {
 namespace XsSetting {
 
     class Setting {
-        vector<string> gameOverWord = {"You Lose!", "Press any key to continue"};
+        vector<string> gameOverWord = {"You Lose!"/*, "Press any key to continue"*/};
         vector<string> changeGameSizeWord = {"←  Width  →    |    ↑  High  ↓"};
         vector<string> changeHeartsWord = {"↑  Heart(s)  ↓"};
         vector<string> changeSpeedWord = {"↑  Speed  ↓"};
@@ -484,7 +484,7 @@ namespace XsSetting {
             }
 
             SetConsoleCursorPosition(console, {1, 1});
-            printf(ESC"[%dXFPS: %.2f\t%.2fms/max: %.2fms ",
+            printf(ESC"[0m" ESC"[%dXFPS: %.2f\tRender Used: %.2fms / Max: %.2fms ",
                    data->gameSizeWidth - 2,
                    (renderTime + delayTime) == 0 ? 1000000 : 1000000.f / (renderTime + delayTime),
                    (float) renderTime / 1000.f,
