@@ -29,13 +29,13 @@ int checkTouch(const unsigned short ax[255 * 255], const unsigned short ay[255 *
                unsigned int length,
                unsigned int offset); // check touch
 
-class Snake {
+struct Snake {
 public:
     unsigned short snakex[255 * 255]{};
     unsigned short snakey[255 * 255]{};
     unsigned short foodx[255 * 255]{};
     unsigned short foody[255 * 255]{};
-    unsigned int foodCount = 20;
+    unsigned int foodCount = 2;
     unsigned int length = 3;
     unsigned int lengthNow = 0;
     unsigned int offset = 0;
@@ -43,8 +43,16 @@ public:
     unsigned short gameSizeHeight = 30; // game size high
     unsigned int hearts = 3; // snake's hearts
     unsigned int speed = 30; // snake's speed
-    unsigned int level = 3; // snake's level
+
+    void init(); // init snake
 };
+
+void Snake::init() {
+    length = 3;
+    lengthNow = 0;
+    offset = 0;
+
+}
 
 namespace XsUtil {
 
@@ -304,6 +312,7 @@ namespace XsSetting {
 
     void Setting::start() {
         XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
+        data->init();
         bool dead = false;
         const short width = data->gameSizeWidth / 2 - 1;
         const short height = data->gameSizeHeight - 1;
@@ -324,6 +333,7 @@ namespace XsSetting {
         }
 
         char moveState = 'd';
+        char oldMoveState = ' ';
 
         // set spawnpoint
 //        unsigned short headx = width >> 1;
@@ -353,19 +363,19 @@ namespace XsSetting {
             // get input
             switch (key) {
                 case 'w':
-                    if (moveState != 's')
+                    if (oldMoveState != 's')
                         moveState = 'w';
                     break;
                 case 's':
-                    if (moveState != 'w')
+                    if (oldMoveState != 'w')
                         moveState = 's';
                     break;
                 case 'a':
-                    if (moveState != 'd')
+                    if (oldMoveState != 'd')
                         moveState = 'a';
                     break;
                 case 'd':
-                    if (moveState != 'a')
+                    if (oldMoveState != 'a')
                         moveState = 'd';
                     break;
             }
@@ -423,7 +433,7 @@ namespace XsSetting {
                 // 更新蛇資料
                 data->snakex[data->offset + data->lengthNow] = headx; // set snakex
                 data->snakey[data->offset + data->lengthNow] = heady; // set snakey
-
+                oldMoveState = moveState;
                 switch (moveState) {
                     case 'd':
                         oldX = headx++;
@@ -457,8 +467,8 @@ namespace XsSetting {
                     while (checkTouch(data->foodx, data->foody,
                                       (x = rand() % (width - 2) + 1), (y = rand() % (height - 2) + 1),
                                       data->foodCount, 0) > -1 &&
-                    checkTouch(data->snakex, data->snakey, x, y,
-                               data->lengthNow,data->offset) > -1);
+                           checkTouch(data->snakex, data->snakey, x, y,
+                                      data->lengthNow, data->offset) > -1);
                     data->foodx[i] = x;
                     data->foody[i] = y;
                     pos(y, x * 2);
@@ -484,6 +494,7 @@ namespace XsSetting {
             }
 
             SetConsoleCursorPosition(console, {1, 1});
+
             printf(ESC"[0m" ESC"[%dXFPS: %.2f\tRender Used: %.2fms / Max: %.2fms ",
                    data->gameSizeWidth - 2,
                    (renderTime + delayTime) == 0 ? 1000000 : 1000000.f / (renderTime + delayTime),
@@ -551,20 +562,16 @@ void errorPrint(int errorCode) {
     }
     printf("\n-\n\n");
     if (errorCode < 0) exit(0);
-
-    //
-
-
 }
 
 int checkTouch(const unsigned short ax[255 * 255], const unsigned short ay[255 * 255], unsigned int x, unsigned int y,
                unsigned int length,
                unsigned int offset) {
 
-    for (int i = 0; i < length; ++i) {
+    for (int i = 0; i < length; ++i)
         if (ax[offset + i] == x && ay[offset + i] == y)
             return i; // return touched index
-    }
+
     return -1; // not touch
 }
 
