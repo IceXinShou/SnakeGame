@@ -307,8 +307,8 @@ namespace XsSetting {
             *(wchar_t *) wch = _getwch();
             nanosleep(&threadDelay, &threadDelay);
         }
-        pthread_exit(nullptr);//
-    }//
+        pthread_exit(nullptr);
+    }
 
     void Setting::start() {
         XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
@@ -316,9 +316,6 @@ namespace XsSetting {
         bool dead = false;
         const short width = data->gameSizeWidth / 2 - 1;
         const short height = data->gameSizeHeight - 1;
-
-//            data->foodx[0] =5;
-//            data->foody[0] =2;
 
         for (int i = 0; i < data->foodCount; ++i) {
             int x, y;
@@ -335,9 +332,7 @@ namespace XsSetting {
         char moveState = 'd';
         char oldMoveState = ' ';
 
-        // set spawnpoint
-//        unsigned short headx = width >> 1;
-//        unsigned short heady = height >> 1;
+        // set spawn point
         unsigned short headx = 1;
         unsigned short heady = 2;
         unsigned short oldX = headx, oldY = heady;
@@ -355,7 +350,6 @@ namespace XsSetting {
         wchar_t key = '\0';
         pthread_create(&keyListener, nullptr, keyEvent, (void *) &key);
 
-//        int q = fps / data->speed * 5;
         int q = 1;
         int timer = 0;
 
@@ -382,16 +376,6 @@ namespace XsSetting {
 
 
 
-            // ---------------------
-
-//            if (!initDone) {
-//                pos(heady, headx * 2);
-//                printf(ESC"[43m  ");
-//
-//                // change old head to body
-//                pos(oldY, oldX * 2);
-//                printf(ESC"[42m  ");
-//            } else {
             // set new head
             pos(heady, headx * 2);
             printf(ESC"[43m  ");
@@ -410,23 +394,7 @@ namespace XsSetting {
             // ---------------------
 
             // 清除畫面
-            /*
-            XsUtil::GUI::clearScreenWithoutBorder(data->gameSizeWidth, data->gameSizeHeight);
-            printf(ESC"[1;1H");
-            for (int i = 0; i < height; ++i) {
-                printf(ESC"[%dd" ESC"[0m", i + 2);
-                for (int j = 0; j < width; ++j) {
-                    switch (area[i][j]) {
-                        case AREA_SNAKE_HEAD:
-                            printf(ESC"[%dG" ESC"[42m  ", j * 2 + 2);
-                            break;
-                        case AREA_SNAKE_BODY:
-                            printf(ESC"[%dG" ESC"[43m  ", j * 2 + 2);
-                            break;
-                    }
-                }
-            }
-        */
+
             // 更新蛇
             if (timer-- == 0) {
                 timer = q; // reset timer
@@ -455,9 +423,9 @@ namespace XsSetting {
 
                 // 判斷新狀態
                 int i;
-                if (headx <= 0 || headx >= width || heady <= 0 || heady >= height) {
+                if (headx <= 0 || headx >= width || heady <= 0 || heady >= height)
                     dead = true;
-                } else if (checkTouch(data->snakex, data->snakey, headx, heady, data->lengthNow,
+                else if (checkTouch(data->snakex, data->snakey, headx, heady, data->lengthNow,
                                       data->offset) > -1) { // if head is body
                     dead = true;
                 } else if ((i = checkTouch(data->foodx, data->foody, headx, heady, data->foodCount, 0)) >
@@ -477,6 +445,7 @@ namespace XsSetting {
 
                 if (dead) {
                     XsUtil::GUI::createMessage(gameOverWord, CENTER, data);
+                    pthread_cancel(keyListener);
                     return;
                 }
 
